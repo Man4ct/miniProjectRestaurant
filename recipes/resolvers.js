@@ -173,11 +173,13 @@ async function createRecipe(parent,args,context,info){
     return newRecipe
 }
 async function updateRecipe(parent,args,context){
-    if(!RegExp("^[0-9]").test(args.price)){
-        throw new ApolloError('FooError', {
-            message: "Price have to be INTEGER!"
-        })
-    }
+    if(args.price){
+        if(!RegExp("^[0-9]").test(args.price)){
+            throw new ApolloError('FooError', {
+                message: "Price have to be INTEGER!"
+            })
+        }
+    }    
     const recipe = await recipes.findByIdAndUpdate(args.id,{
         recipe_name: args.recipe_name,
         description: args.description,

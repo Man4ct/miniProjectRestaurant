@@ -3,18 +3,15 @@ const { users, transactions, recipes, ingredients, specialOffers } = require('..
 const { ApolloError } = require('apollo-errors');
 const { ifError } = require('assert');
 
-async function createSpecialOffer(parent, { title, description, discountAmount, menuDiscount, status }, context, info) {
+async function createSpecialOffer(parent, { title, description, menuDiscount, status }, context, info) {
     try {
         if (!menuDiscount || !menuDiscount.length) {
             throw new ApolloError('FooError', {
                 message: "Menu cannot be empty!"
             })
         }
-        if(discountAmount < 0 || discountAmount > 100) {
-            throw new ApolloError('FooError', {
-                message: "Discount is out of range!"
-            })
-        }
+
+       
         
         const specialOffer = {}
         specialOffer.title = title.trim()
@@ -30,6 +27,11 @@ async function createSpecialOffer(parent, { title, description, discountAmount, 
         checkMenu = checkMenu.map((el) => el.id)
         let discount = menuDiscount.map((el) => el.discount)
         for(menu of menuDiscount){
+            if(menu.discount < 0 || menu.discount > 100) {
+                throw new ApolloError('FooError', {
+                    message: "Discount is out of range!"
+                })
+            }
             if (checkMenu.indexOf(menu.recipe_id) === -1) {
                 throw new ApolloError("FooError", {
                     message: "Menu Not Found in Database!"
@@ -39,6 +41,11 @@ async function createSpecialOffer(parent, { title, description, discountAmount, 
             if(findMenu.status === 'unpublished' || findMenu.status === 'deleted') {
                 throw new ApolloError("FooError",{
                     message: "Menu You Insert is Unpublished!"
+                })
+            }
+            if(findMenu.isDiscount === true){
+                throw new ApolloError("FooError",{
+                    message: "Menu You Insert is already in Discount!"
                 })
             }
             if(status === 'unpublished') {
@@ -129,15 +136,23 @@ async function updateSpecialOffer(parent,args,context){
     }
     let checkMenu = await recipes.find()
         checkMenu = checkMenu.map((el) => el.id)
-    let discount = args.menuDiscount.map((el) => el.discount)
 
+    if(args.menuDiscount){
+    let discount = args.menuDiscount.map((el) => el.discount)
         for(menu of args.menuDiscount){
             if(menu.recipe_id){
-            
             if (checkMenu.indexOf(menu.recipe_id) === -1) {
                 throw new ApolloError("FooError", {
                     message: "Menu Not Found in Database!"
                 })
+            }
+            if(menu.discount){
+
+                if(menu.discount < 0 || menu.discount > 100) {
+                    throw new ApolloError('FooError', {
+                        message: "Discount is out of range!"
+                    })
+                }
             }
             const findMenu = await recipes.findById(menu.recipe_id)
             if(findMenu.status === 'unpublished' || findMenu.status === 'deleted') {
@@ -176,6 +191,7 @@ async function updateSpecialOffer(parent,args,context){
                 },{new:true})
             }
         }
+    }
     if(specialOffer){
         return specialOffer
         }
