@@ -220,7 +220,7 @@ const transactionsSchema = new mongoose.Schema({
             amount: {
                 type: Number,
                 required: true,
-                min: 0,
+                min: 1,
                 default:1
             },
             note: {

@@ -440,6 +440,8 @@ try{
     //         })
     //     }
     // })
+    console.log("INI AVAILABLE")
+    console.log(available)
     return new transactions({user_id: user_id, menu: menus,order_status: "pending",recipeStatus: recipeStatus,totalPrice: totalPrice,onePrice:price,available:available,order_date:moment(new Date()).format("LLL") ,ingredientMap: ingredientMap})
     }
     catch(err){
@@ -529,7 +531,7 @@ async function updateTransaction(parent,args,context){
     if(args.amount){
         if(args.amount <= 0){
             throw new ApolloError('FooError',{
-                message: 'Csnnot order if amount 0 or less'})
+                message: 'Cannot order if amount 0 or less'})
         }
         const updateTransaction = await transactions.findOneAndUpdate(
             {_id: args.id,},
@@ -544,7 +546,10 @@ async function updateTransaction(parent,args,context){
         },
         {new : true}
             )
+
 const data = await transactions.findById(args.id)
+console.log(data.available)
+
         data.menu.forEach((amount) => {
             if(amount > data.available){
                 throw new ApolloError('FooError',{
@@ -588,7 +593,7 @@ if(updateTransaction)return data
                 )
 const data = await transactions.findById(args.id)
             data.menu.forEach((amount) => {
-                if(amount > data.available){
+                if(amount.amount > data.available){ƒ
                     throw new ApolloError('FooError',{
                         message: 'Insufficient Stock'})
                 }
@@ -597,6 +602,13 @@ const data = await transactions.findById(args.id)
     }
 
     if(args.option === 'pull'){
+        const data = await transactions.findById(args.id)
+            data.menu.forEach((el) => {
+                if(el.amount <= 1){
+                    throw new ApolloError('FooError',{
+                        message: 'Insufficient Stock'})
+                }
+            })
         const updateTransaction = await transactions.findOneAndUpdate(
                 {_id: args.id},
                 {$set: {
@@ -609,7 +621,7 @@ const data = await transactions.findById(args.id)
                 }
             },{new : true}
                 )
-            const data = await transactions.findById(args.id)
+            
             if(updateTransaction)return data
             }
     

@@ -127,19 +127,32 @@ async function createRecipe(parent,args,context,info){
     }
     if(!RegExp("^[0-9]").test(args.price)){
         throw new ApolloError('FooError', {
-            message: "Price have to be INTEGER!"
+            message: "Price have to be number only!"
         })
     }
     let checkIngredient = await ingredients.find()
     checkIngredient = checkIngredient.map((el) => el.id)
-    let ingredientMap = args.input.map((el) => el.ingredient_id)
-    ingredientMap.forEach((el) => {
-        if(checkIngredient.indexOf(el) === -1){
+    for(el of args.input){
+        if(!RegExp("^[0-9]").test(el.stock_used)){
+            throw new ApolloError('FooError', {
+                message: "Stock used have to be number only!"
+            })
+        }
+        if(checkIngredient.indexOf(el.ingredient_id) === -1){
             throw new ApolloError("FooError",{
                 message: "Ingredient Not Found in Database!"
             })
         }
-    })
+    }
+    
+    // let ingredientMap = args.input.map((el) => el.ingredient_id)
+    // ingredientMap.forEach((el) => {
+    //     if(checkIngredient.indexOf(el) === -1){
+    //         throw new ApolloError("FooError",{
+    //             message: "Ingredient Not Found in Database!"
+    //         })
+    //     }
+    // })
     const recipe= {}
     recipe.description = args.description
     recipe.price = args.price
@@ -158,21 +171,25 @@ async function updateRecipe(parent,args,context){
     if(args.price){
         if(!RegExp("^[0-9]").test(args.price)){
             throw new ApolloError('FooError', {
-                message: "Price have to be INTEGER!"
+                message: "Price have to be numbers only!"
             })
         }
     }   
     if(args.input){
         let checkIngredient = await ingredients.find()
-    checkIngredient = checkIngredient.map((el) => el.id)
-    let ingredientMap = args.input.map((el) => el.ingredient_id)
-    ingredientMap.forEach((el) => {
-        if(checkIngredient.indexOf(el) === -1){
-            throw new ApolloError("FooError",{
-                message: "Ingredient Not Found in Database!"
-            })
+        checkIngredient = checkIngredient.map((el) => el.id)
+        for(el of args.input){
+            if(!RegExp("^[0-9]").test(el.stock_used)){
+                throw new ApolloError('FooError', {
+                    message: "Stock used have to be more than 0!"
+                })
+            }
+            if(checkIngredient.indexOf(el.ingredient_id) === -1){
+                throw new ApolloError("FooError",{
+                    message: "Ingredient Not Found in Database!"
+                })
+            }
         }
-    })
     }
     
     const recipe = await recipes.findByIdAndUpdate(args.id,{
