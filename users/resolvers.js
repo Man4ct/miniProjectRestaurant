@@ -4,7 +4,6 @@ const { ApolloError} = require('apollo-errors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
-const { ifError } = require('assert');
 
 const userType = {
 	"userType_permission" : [
@@ -101,8 +100,6 @@ async function getAllUsers(parent,{email,last_name,first_name,page,limit,sort}, 
             status: 'active'
         }},
         {$sort: {fullName:1}}
-
-
     ]
     if (page){
         aggregateQuery.push({
@@ -135,7 +132,6 @@ async function getAllUsers(parent,{email,last_name,first_name,page,limit,sort}, 
         },
         )
     }
-    
             let result = await users.aggregate(aggregateQuery);
             count = result.length
             result.forEach((el)=>{
@@ -183,11 +179,11 @@ async function logout(parent,args,context){
       });
 }
 async function updateUser(parent, args,context){
-    // if(args.isUsed === true){
-    //     throw new ApolloError('FooError', {
-    //         message: 'Cannot be change from here!'
-    //       });
-    // }
+    if(args.isUsed === true){
+        throw new ApolloError('FooError', {
+            message: 'Cannot be change from here!'
+        });
+    }
     const checkUser = await users.findById(context.req.payload)
     if(args.last_name && !args.first_name){
         args.fullName = args.last_name + ', ' + checkUser.first_name
@@ -213,7 +209,6 @@ async function updateUser(parent, args,context){
             });
         }
     }
-    // args.password = await bcrypt.hash(args.password, 5)
     const updateUser = await users.findByIdAndUpdate(context.req.payload,args,{
         new: true
     })
@@ -239,8 +234,6 @@ async function deleteUser(parent, args,context){
     
 }
 async function getToken(parent, args,context){
-    // const email = await u
-        const tick = Date.now()
         if(!args.email){
             return new ApolloError('FooError', {
                 message: 'Email Required !'
@@ -277,7 +270,6 @@ async function getToken(parent, args,context){
         }
     })
     const token = jwt.sign({ email: args.email,},'zetta',{expiresIn: "6h"});
-        console.log(`Total Time for Login: ${Date.now()- tick} ms`)
     return{message: token, user: { 
         email: userCheck.email, 
         fullName: userCheck.first_name + ' ' + userCheck.last_name, 
@@ -289,22 +281,6 @@ async function getToken(parent, args,context){
     }}
 }
 async function changePassword(parent,args,context){
-    if(args.fromLogin === true){
-        args.new_password = await bcrypt.hash(args.new_password, 5)
-        const updatePass =await users.findOneAndUpdate({email:args.email},{
-            $set:{
-                password: args.new_password
-            }
-        },{
-            new: true
-        })
-        if(!updatePass){
-            return new ApolloError('FooError', {
-                message: 'Email Not Found !'
-              });
-        }
-        return updatePass
-    }else{
         const userCheck = await users.findOne({email:args.email})
     if(!userCheck){
         return new ApolloError('FooError', {
@@ -325,7 +301,6 @@ async function changePassword(parent,args,context){
         new: true
     })
     return updatePass
-    }
 }
 async function forgotPassword(parent,args,context) {
     if(!args.email){
@@ -373,7 +348,6 @@ const resolverUser  = {
         logout,
         forgotPassword,
         changePassword
-        // addCart
     }
 }
 module.exports = resolverUser;

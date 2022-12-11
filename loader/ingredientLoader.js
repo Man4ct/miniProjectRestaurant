@@ -1,6 +1,5 @@
 const DataLoader = require('dataloader');
-const { log } = require('loglevel');
-const {users,ingredients,recipes,transactions} = require('../schema');
+const {ingredients} = require('../schema');
 
 const loadIngredient = async function(checkId){
     let ingredientList = await ingredients.find({

@@ -1,13 +1,7 @@
 const mongoose = require('mongoose');
 const {users,transactions,recipes,ingredients} = require('../schema');
 const { ApolloError} = require('apollo-errors');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
-const { GraphQLScalarType ,Kind} = require ('graphql');
 const moment = require('moment');
-const { ifError } = require('assert');
-const { argsToArgsConfig } = require('graphql/type/definition');
-const { sortedLastIndexOf } = require('lodash');
 async function getAllTransactions(parent,{page, limit, last_name_user,time_start,time_end ,recipe_name,order_status,filterDate, order_date,order_date_start,order_date_end, fullName_user,isCart,sort,userFind},context,info) {
     let count = null
     let isUser = await users.findById(context.req.payload)
@@ -25,7 +19,6 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
             {$sort: {_id:-1}}
         )
         // count = await transactions.count({status: 'active',order_status:"pending" ,user_id: mongoose.Types.ObjectId(context.req.payload)});
-
     }
     if(isCart === false){
         aggregateQuery.push(
@@ -37,7 +30,6 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
         )
         // count = await transactions.count({status: 'active',order_status:"success" });
     }
-    
     if(recipe_name){
         aggregateQuery.push({
                 $lookup:
@@ -54,16 +46,7 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
         )
         // const findRecipes =await recipes.findOne({recipe_name:recipe_name})
         // count = await transactions.count({"menu.recipe_id": findRecipes._id})
-
     }
-    // if(order_status){
-    //     aggregateQuery.push(
-    //     {
-    //         $match: {"order_status" : new RegExp(order_status, "i")}
-    //     }
-    //     )
-    //     count = await transactions.count({status: 'active',order_status : order_status})
-    // }
     if(order_date){
         aggregateQuery.push(
         {
@@ -74,8 +57,6 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
         // count = await transactions.count({status: 'active',order_date : new RegExp(order_date, "i")})
     }
 
-
-
     if(isUser.role === 'user'){
         aggregateQuery.push({
             $match: {
@@ -83,7 +64,6 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
             }
         })
         // count = await transactions.count({status: 'active',order_status:"success",user_id: mongoose.Types.ObjectId(context.req.payload)});
-
         if(userFind || last_name_user){
             throw new ApolloError('FooError', {
                 message: 'Not Authorized!'
@@ -100,7 +80,7 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
             // count = await transactions.count({status: 'active' ,user_id: mongoose.Types.ObjectId(userFind)});
         }
     if(last_name_user){
-        const last_name =await users.findOne({last_name:last_name_user})
+        await users.findOne({last_name:last_name_user})
         aggregateQuery.push({
                 $lookup:
                 {
@@ -115,19 +95,15 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
         // count = await transactions.count({order_status:"success",status: 'active',user_id: last_name._id})
     }
     if(fullName_user){
-        const userFullName =await users.findOne({fullName:fullName_user})
+        await users.findOne({fullName:fullName_user})
         aggregateQuery.push({
-                $lookup:
-                {
+                $lookup:{
                 from: "users",
                 localField: "user_id",
                 foreignField: "_id",
                 as: "users"
                 },
-
-        },
-        
-        {
+        },{
             $match: {"users.fullName" :new RegExp(fullName_user, "i")}
         }
         )
@@ -263,17 +239,16 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
                 {
                     $addFields: {
                         date: {
-                           $dateFromString: {
-                              dateString: '$order_date',
-                              // timezone: 'America/New_York'
-                           }
+                            $dateFromString: {
+                            dateString: '$order_date',
+                            }
                         }
                     }
-                },
-                {
+                },{
                     $match: {date :{
                         $gte:new Date(last7Days)
-                }}
+                            }       
+                    }
                 }
                 )
                 // count = await transactions.count({status: 'active' ,"order_date" : {
@@ -286,10 +261,9 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
                 {
                     $addFields: {
                         date: {
-                           $dateFromString: {
-                              dateString: '$order_date',
-                              // timezone: 'America/New_York'
-                           }
+                            $dateFromString: {
+                            dateString: '$order_date',
+                            }
                         }
                     }
                 },
@@ -363,10 +337,7 @@ async function reduceIngredientStock(arrIngredient){
             new: true
         })
     }
-
 }
-
-
 async function validateOrder(user_id, menus,checkout){
 try{
     let menuTransaction = new transactions({menu : menus })
@@ -386,8 +357,8 @@ try{
     let price = 0
     let totalPrice = 0
     let recipeStatus = null
-    let message = [] //INI ARRAY BUAT MESSAGENYA
-    const stockIngredient = {};  // INI FUNGSINYA
+    let message = [] 
+    const stockIngredient = {};  
     const ingredientMap = []
     for ( let menu of menuTransaction.menu){
         if(menu.recipe_id.status === 'unpublished'){
@@ -410,15 +381,15 @@ try{
         for( let ingredient of menu.recipe_id.ingredients){
                 const ingredientRecipe = {ingredient_id: ingredient.ingredient_id._id,
                     stock: ingredient.ingredient_id.stock - (ingredient.stock_used * amount)}
-                    if (ingredientRecipe.ingredient_id in stockIngredient) { } // MULAI DARI SINI IF NYA
+                    if (ingredientRecipe.ingredient_id in stockIngredient) { } 
                     else { stockIngredient[ingredientRecipe.ingredient_id] = ingredient.ingredient_id.stock; }
                     
-                if(checkout === true){ // INI CHECKOUT TRUE MAKSUDNYA DI DALAM CART
+                if(checkout === true){ 
                     
-                    if(stockIngredient[ingredientRecipe.ingredient_id] < (ingredient.stock_used * amount)){ // KALAU INGREDIENTNYA GAK CUKUP,MASUK DISINI
-                        message.push(menu.recipe_id.recipe_name) // INI NGEPUSH MENU" YANG INGREDIENT NYA ABIS
+                    if(stockIngredient[ingredientRecipe.ingredient_id] < (ingredient.stock_used * amount)){ 
+                        message.push(menu.recipe_id.recipe_name) 
                     }
-                    if(message.length === 0){ // INI MAKSUDNYA KALAU GAAD YG DI PUSH
+                    if(message.length === 0){ 
                        
                         await recipes.findByIdAndUpdate(menu.recipe_id._id,{
                             $set: {
@@ -441,9 +412,9 @@ try{
         }
         totalPrice += price * amount;
     }
-    // console.log(totalPrice)
+    
 
-    if(message.length > 0 ){ //INI THROW ERRORNYA
+    if(message.length > 0 ){ 
          throw new ApolloError('FooError',{
                             message: `${message} has sufficient stock ingredient`
                         })

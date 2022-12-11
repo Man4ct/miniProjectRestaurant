@@ -1,7 +1,6 @@
 const DataLoader = require('dataloader');
-const {users,ingredients,recipes,transactions} = require('../schema');
+const {users} = require('../schema');
 
-//CREATE LOADER FOR USER
 const loadUser = async function(checkId){
     let userList = await users.find({
         _id:{
@@ -12,7 +11,6 @@ const loadUser = async function(checkId){
     userList.forEach((user) => userMap[user._id] = user)
     return checkId.map(id => userMap[id])
 }
-//CREATE LOADER FOR RECIPES
 
 const userLoader = new DataLoader(loadUser)
 

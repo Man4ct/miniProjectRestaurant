@@ -1,4 +1,4 @@
-const { ApolloServer,gql } = require('apollo-server');
+const {gql } = require('apollo-server');
 
 const userTypeDefs = gql`#graphql
 type User {
@@ -14,7 +14,6 @@ type User {
     balance: Int
     token: String
     verify: String
-    # cart: [Menu]
     sort: userSort
     fullName: String
     isUsed: Boolean
@@ -85,8 +84,6 @@ type Mutation {
         fromRegister: Boolean
     ): User
     changePassword(
-        # email: String,
-        # fromLogin: Boolean
         old_password: String
         new_password: String
     ): User
@@ -101,33 +98,23 @@ type Mutation {
     email: String
     last_name: String
     first_name: String
-    # verify: String
-    # check_password: String!
     security_question: String
     security_answer: String
-    # role: Role!
     ) : User!
     updateUser(
-        # id: ID
-        # password: String
     email: String
     last_name: String
     first_name: String
     fullName: String
     img: String
-    # status: Enum
-    # isUsed: Boolean
     ): User
 
     logout(
-    # id: ID
     email: String
     isUsed: Boolean
     ): User
     deleteUser(id: ID!): respondDelUser!
     getToken(email: String!, password:String!) : login!
-    # logout(isUsed: Boolean): User
-    # addCart( input: [menuInput]) : respondAddCart!
 }
 type Query {
     getAllUsers(email:String,last_name: String,first_name:String,page: Int,limit: Int sort:userSorting ) : usersPage!

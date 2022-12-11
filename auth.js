@@ -1,6 +1,5 @@
 
 const jwt = require('jsonwebtoken');
-
 const { ApolloError} = require('apollo-errors');
 const { users } = require('./schema');
 
@@ -33,8 +32,6 @@ module.exports = {
     Mutation: {
         checkoutTransaction: authMiddleware,
         changePassword: authMiddleware,
-        // addUser: authMiddleware,
-        // logout: authMiddleware,
         updateUser: authMiddleware,
         deleteUser: authMiddleware,
         addIngredient: authMiddleware,

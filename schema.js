@@ -8,9 +8,6 @@ const userSchema = new mongoose.Schema({
     token : {
         type: String,
     },
-    // verify : {
-    //     type: String,
-    // },
     password : {
         type: String,
         required: true,
@@ -119,7 +116,7 @@ const recipesSchema = new mongoose.Schema({
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Ingredients",
                 required: true,
-                unique: false
+                unique: true
             },
             stock_used: {
                 type: Number,
@@ -249,8 +246,7 @@ const transactionsSchema = new mongoose.Schema({
 
     onePrice: {
         type: Number,
-        // required: true,
-        // min: 0
+        min: 0
     },
     recipeStatus:{
         type: String,
@@ -259,7 +255,7 @@ const transactionsSchema = new mongoose.Schema({
 
     totalPrice: {
         type: Number,
-        // required: true,
+        required: true,
         min: 0
     },
     ingredientMap: [
@@ -272,14 +268,10 @@ const transactionsSchema = new mongoose.Schema({
             },
             stock: {
                 type: Number,
-                // required: true,
                 min: 0
             }
         }
     ],
-    // created/
-    // createdA
-    // timestamps: true
 },{timestamps: true})
 const specialOffers = mongoose.model("specialOffers", specialOffersSchema)
 const users = mongoose.model("Users", userSchema)
