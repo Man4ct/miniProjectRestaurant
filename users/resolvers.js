@@ -44,29 +44,29 @@ let transporter = nodemailer.createTransport({
         pass: "qdpsrevldqgntani"
     }
 });
-async function register(parent,args, context, info){
+async function register(parent,{newUser}, context, info){
 
-    if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(args.email))throw new Error("Email not valid!")
-    if(!new RegExp(`@gmail.com$`).test(args.email)){
+    if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(newUser.email))throw new Error("Email not valid!")
+    if(!new RegExp(`@gmail.com$`).test(newUser.email)){
         throw new ApolloError('FooError', {
             message: 'Email has to have a domain of "@gmail.com"!'
         });
     }
-    userCheck = await users.findOne({ email: args.email})
+    userCheck = await users.findOne({ email: newUser.email})
     if(userCheck){
         throw new ApolloError('FooError', {
             message: 'Email already exist!'
         });
     }
 
-    args.password = await bcrypt.hash(args.password, 5)
-    const newUser = new users(args)
-    newUser.fullName = args.last_name + ', ' + args.first_name
-    newUser.userType = userType
-    newUser.security_question = args.security_question.toLowerCase()
-    newUser.security_answer = args.security_answer.toLowerCase()
-    await newUser.save()
-    return newUser;
+    newUser.password = await bcrypt.hash(newUser.password, 5)
+    const registerUser = new users(newUser)
+    registerUser.fullName = newUser.last_name + ', ' + newUser.first_name
+    registerUser.userType = userType
+    // newUser.security_question = args.security_question.toLowerCase()
+    // newUser.security_answer = args.security_answer.toLowerCase()
+    await registerUser.save()
+    return registerUser;
 }
 
 async function reqTokenByEmail(parent,args,context){
@@ -178,42 +178,42 @@ async function logout(parent,args,context){
         message: 'Wrong Email!'
       });
 }
-async function updateUser(parent, args,context){
-    if(args.isUsed === true){
+async function updateUser(parent, {updateUser},context){
+    if(updateUser.password){
         throw new ApolloError('FooError', {
-            message: 'Cannot be change from here!'
+            message: 'Cannot change password from here'
         });
     }
     const checkUser = await users.findById(context.req.payload)
-    if(args.last_name && !args.first_name){
-        args.fullName = args.last_name + ', ' + checkUser.first_name
+    if(updateUser.last_name && !updateUser.first_name){
+        updateUser.fullName = updateUser.last_name + ', ' + checkUser.first_name
     }
-    if(!args.last_name && args.first_name){
-        args.fullName = checkUser.last_name + ', ' + args.first_name
+    if(!updateUser.last_name && updateUser.first_name){
+        updateUser.fullName = checkUser.last_name + ', ' + updateUser.first_name
     }
-    if(args.last_name && args.first_name){
-        args.fullName = args.last_name + ', ' + args.first_name
+    if(updateUser.last_name && updateUser.first_name){
+        updateUser.fullName = updateUser.last_name + ', ' + updateUser.first_name
     }
-    if(args.email){
-        if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(args.email))throw new Error("Email not valid!")
-        if(!new RegExp(`@gmail.com$`).test(args.email)){
+    if(updateUser.email){
+        if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(updateUser.email))throw new Error("Email not valid!")
+        if(!new RegExp(`@gmail.com$`).test(updateUser.email)){
             throw new ApolloError('FooError', {
                 message: 'Email has to have a domain of "@gmail.com"!'
             });
         }
     }
-    if(args.img){
-        if(args.img.length < 7){
+    if(updateUser.img){
+        if(updateUser.img.length < 7){
             throw new ApolloError('FooError', {
                 message: 'Put appropriate image link!'
             });
         }
     }
-    const updateUser = await users.findByIdAndUpdate(context.req.payload,args,{
+    const updatedUser = await users.findByIdAndUpdate(context.req.payload,updateUser,{
         new: true
     })
-    if(updateUser){
-        return updateUser
+    if(updatedUser){
+        return updatedUser
     }
     throw new ApolloError('FooError', {
         message: 'Please insert something to update!'
@@ -255,12 +255,14 @@ async function getToken(parent, args,context){
     });
     if(userCheck.status === 'deleted'){
         throw new ApolloError('FooError', 
-        {message: "Can't Login, User Status: Deleted!"})
+        {message: "Can't Login, User Status: Deleted!"
+    })
     }
     const getPassword = await bcrypt.compare(args.password, userCheck.password )
     if(!getPassword){
         throw new ApolloError('FooError', 
-        {message: "Wrong password!"})
+        {message: "Wrong password!"
+    })
     }
     await users.updateOne({
         email: args.email
@@ -281,10 +283,10 @@ async function getToken(parent, args,context){
     }}
 }
 async function changePassword(parent,args,context){
-        const userCheck = await users.findOne({email:args.email})
+        const userCheck = await users.findById(context.req.payload)
     if(!userCheck){
         return new ApolloError('FooError', {
-            message: 'Email Not Found !'
+            message: 'User Not Found !'
           });
     }
     const getPassword = await bcrypt.compare(args.old_password, userCheck.password )

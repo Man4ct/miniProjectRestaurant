@@ -16,7 +16,7 @@ const recipeTypeDefs = gql`
     max_page: Int
     data: [Recipe]
     }
-    enum Category {
+    enum enumCategory {
         food
         drink
     }
@@ -41,6 +41,7 @@ const recipeTypeDefs = gql`
         sold: enumSorting
         
     }
+   
     type Recipe {
     id: ID
     recipe_name: String
@@ -50,7 +51,7 @@ const recipeTypeDefs = gql`
     available: Int
     img: String
     description: String
-    category: Category
+    category: enumCategory
     finalPrice: Int
     highlight: Boolean
     isDiscount: Boolean
@@ -63,16 +64,27 @@ const recipeTypeDefs = gql`
     message: String
     data: Recipe
     }
-
+    input recipeInput {
+    recipe_name: String
+    ingredients:[ingredientInput]
+    price: Int
+    status: enumRecipe
+    img: String
+    description: String
+    category: enumCategory
+    highlight: Boolean
+    # sort: recipeSort
+    # publish_status: Publish
+  }
 type Query {
     getActiveMenu(recipe_name: String,page: Int,limit: Int  sorting: recipeSorting highlight: Boolean): recipePage!
     getAllRecipes(recipe_name: String page: Int,limit: Int sorting: recipeSorting highlight: Boolean): recipePage!
 
     getOneRecipe(id:ID!): Recipe
-}
+} 
 type Mutation {
-    createRecipe(recipe_name: String!  isDiscount: Boolean discountAmount: Int category: Category  img: String description: String price: Int! highlight: Boolean input:[ingredientInput]) : Recipe!
-    updateRecipe(id:ID! recipe_name: String  isDiscount: Boolean discountAmount: Int img: String status: enumRecipe description: String price: Int highlight: Boolean input:[ingredientInput]): Recipe!
+    createRecipe(inputRecipe:recipeInput) : Recipe!
+    updateRecipe(id: ID,inputRecipe:recipeInput): Recipe!
     deleteRecipe(id: ID!): respondDelRecipe!
 }`
 

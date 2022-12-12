@@ -377,7 +377,8 @@ try{
         const amount = menu.amount
         if(amount <= 0){
             throw new ApolloError('FooError',{
-                message: 'Csnnot order if amount 0 or less'})
+                message: 'Cannot order if amount 0 or less'
+            })
         }
         for( let ingredient of menu.recipe_id.ingredients){
                 const ingredientRecipe = {ingredient_id: ingredient.ingredient_id._id,
@@ -453,16 +454,16 @@ try{
     }
 }
 
-async function createTransaction(parent,args,context){
-    if(args.input.length == 0){
+async function createTransaction(parent,{menu},context){
+    if(menu.length == 0){
         throw new ApolloError('FooError', {
             message: "Input cannot be empty!"
         })
     }
     const transaction = {}
     transaction.user_id = context.req.payload
-    transaction.menu = args.input
-    const newTransaction = await validateOrder(context.req.payload, args.input,false,0 )
+    transaction.menu = menu
+    const newTransaction = await validateOrder(context.req.payload, menu,false,0 )
     await newTransaction.save()
     return newTransaction
 }
@@ -500,13 +501,13 @@ async function checkoutTransaction(parent,args,context){
     await transactions.create(transaction)
     return transaction
 }
-async function updateTransaction(parent,args,context){
+async function updateTransaction(parent,{menu,id,option},context){
     // let amount = 0
     let recipeId = ""
     let note = ""
     let transaction = null
-    if(args.id){
-        transaction = await transactions.findById(args.id)
+    if(id){
+        transaction = await transactions.findById(id)
         transaction.menu.forEach((el) => {
             amount = el.amount
             recipeId = el.recipe_id
@@ -514,33 +515,33 @@ async function updateTransaction(parent,args,context){
         })
     }
 
-    if(args.note === ""){
+    // if(menu.note === ""){
+    //     transaction.menu.forEach((el) => {
+    //         note = ""
+    //         return( el.note= note)
+    //     })
+    //     await transaction.save()
+    // return transaction
+    // }
+    if(menu.note){
         transaction.menu.forEach((el) => {
-            note = ""
-            return( el.note= note)
-        })
-        await transaction.save()
-    return transaction
-    }
-    if(args.note){
-        transaction.menu.forEach((el) => {
-        note = args.note
+        note = menu.note
         return( el.note= note)
     })
     await transaction.save()
     return transaction
 }
-    if(args.amount){
-        if(args.amount <= 0){
+    if(menu.amount){
+        if(menu.amount <= 0){
             throw new ApolloError('FooError',{
                 message: 'Cannot order if amount 0 or less'})
         }
         const updateTransaction = await transactions.findOneAndUpdate(
-            {_id: args.id,},
+            {_id: id,},
             {$set: {  
                 // "totalPrice": (transaction.onePrice * args.amount),                  
                 "menu":{
-                    "amount": args.amount,
+                    "amount": menu.amount,
                     "recipe_id": recipeId,
                     "note": note
                 },
@@ -548,28 +549,18 @@ async function updateTransaction(parent,args,context){
         },
         {new : true}
             )
-
-// const data = await transactions.findById(args.id)
-//         data.menu.forEach((amount) => {
-//             if(amount > data.available){
-//                 throw new ApolloError('FooError',{
-//                     message: 'Insufficient Stock'})
-//             }
-//         })
-if(updateTransaction)return updateTransaction
+        if(updateTransaction)return updateTransaction
     }
-    if(args.option === 'emptyCart'){
+    if(option === 'emptyCart'){
         const deleteTransaction = await transactions.updateMany({
             user_id: mongoose.Types.ObjectId(context.req.payload),
             order_status: "pending"
         },{
-            $set:{
                 status: 'deleted'
-            }
         },{new : true})
         return deleteTransaction
     }
-    if(args.option === 'delete'){
+    if(option === 'delete'){
         const updateTransaction = await transactions.findByIdAndUpdate(args.id,{
             status: 'deleted'
         }, {
@@ -577,53 +568,6 @@ if(updateTransaction)return updateTransaction
         })
         // const data = await transactions.findById(args.id)
         if(updateTransaction)return updateTransaction    }
-//     if(args.option === 'push'){
-//         const updateTransaction = await transactions.findOneAndUpdate(
-//                 {_id: args.id,},
-//                 {$set: {  
-//                     "totalPrice": transaction.totalPrice + transaction.onePrice,                  
-//                     "menu":{
-//                         "amount": amount + 1,
-//                         "recipe_id": recipeId,
-//                         "note": note
-//                     },
-//                 },
-//             },
-//             {new : true}
-//                 )
-// // const data = await transactions.findById(args.id)
-// //             data.menu.forEach((amount) => {
-// //                 if(amount.amount > data.available){ƒ
-// //                     throw new ApolloError('FooError',{
-// //                         message: 'Insufficient Stock'})
-// //                 }
-// //             })
-//     if(updateTransaction)return updateTransaction
-//     }
-
-//     if(args.option === 'pull'){
-//         const data = await transactions.findById(args.id)
-//             data.menu.forEach((el) => {
-//                 if(el.amount <= 1){
-//                     throw new ApolloError('FooError',{
-//                         message: 'Insufficient Stock'})
-//                 }
-//             })
-//         const updateTransaction = await transactions.findOneAndUpdate(
-//                 {_id: args.id},
-//                 {$set: {
-//                     "totalPrice": transaction.totalPrice - transaction.onePrice,                  
-//                     "menu":{
-//                         "amount": amount - 1,
-//                         "recipe_id": recipeId,
-//                         "note": note
-//                     }
-//                 }
-//             },{new : true}
-//                 )
-            
-//             if(updateTransaction)return data
-//             }
     
     throw new ApolloError('FooError', {
         message: 'Wrong ID!'

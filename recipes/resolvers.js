@@ -119,20 +119,20 @@ async function getAllRecipes(parent,args,context,info) {
     };
 }
 
-async function createRecipe(parent,args,context,info){
-    if(args.input.length == 0){
+async function createRecipe(parent,{inputRecipe},context,info){
+    if( !inputRecipe.ingredients || inputRecipe.ingredients.length == 0){
         throw new ApolloError('FooError', {
             message: "Ingredient cannot be empty!"
         })
     }
-    if(!RegExp("^[0-9]").test(args.price)){
+    if(!RegExp("^[0-9]").test(inputRecipe.price)){
         throw new ApolloError('FooError', {
             message: "Price have to be number only!"
         })
     }
     let checkIngredient = await ingredients.find()
     checkIngredient = checkIngredient.map((el) => el.id)
-    for(el of args.input){
+    for(el of inputRecipe.ingredients){
         if(!RegExp("^[0-9]").test(el.stock_used)){
             throw new ApolloError('FooError', {
                 message: "Stock used have to be number only!"
@@ -153,32 +153,25 @@ async function createRecipe(parent,args,context,info){
     //         })
     //     }
     // })
-    const recipe= {}
-    recipe.description = args.description
-    recipe.price = args.price
-    recipe.img = args.img
-    recipe.recipe_name = args.recipe_name
-    recipe.ingredients = args.input
-    recipe.isDiscount = args.isDiscount
-    recipe.discountAmount = args.discountAmount
-    recipe.highlight = args.highlight
+    const recipe= inputRecipe
+    
 
     const newRecipe = await recipes.create(recipe)
 
     return newRecipe
 }
-async function updateRecipe(parent,args,context){
-    if(args.price){
-        if(!RegExp("^[0-9]").test(args.price)){
+async function updateRecipe(parent,{id,inputRecipe, inputIngredient},context){
+    if(inputRecipe.price){
+        if(!RegExp("^[0-9]").test(inputRecipe.price)){
             throw new ApolloError('FooError', {
-                message: "Price have to be numbers only!"
+                message: "Price have to be number only!"
             })
         }
     }   
-    if(args.input){
+    if(inputIngredient){
         let checkIngredient = await ingredients.find()
         checkIngredient = checkIngredient.map((el) => el.id)
-        for(el of args.input){
+        for(el of inputIngredient){
             if(!RegExp("^[0-9]").test(el.stock_used)){
                 throw new ApolloError('FooError', {
                     message: "Stock used have to be more than 0!"
@@ -191,45 +184,38 @@ async function updateRecipe(parent,args,context){
             }
         }
     }
-    
-    const recipe = await recipes.findByIdAndUpdate(args.id,{
-        recipe_name: args.recipe_name,
-        description: args.description,
-        price: args.price,
-        img: args.img,
-        status: args.status,
-        ingredients: args.input,
-        highlight: args.highlight
-    },{
-        new: true
-    })
-    if(args.status === "unpublished" || recipe.status === "unpublished"){
+    if(inputRecipe.status === "unpublished"){
         await transactions.findOneAndUpdate(
-            {"menu.recipe_id": mongoose.Types.ObjectId(args.id)}
+            {"menu.recipe_id": mongoose.Types.ObjectId(id)}
             ,{
             $set: {
                 recipeStatus: "unpublished"
             }
-        },{new : true}
+        }
         )
         await transactions.findOne(
-            {"menu.recipe_id": mongoose.Types.ObjectId(args.id)}
+            {"menu.recipe_id": mongoose.Types.ObjectId(id)}
         )
     }
 
-    if(args.status === "active" || recipe.status === "active"){
+    if(inputRecipe.status === "active"){
         await transactions.findOneAndUpdate(
-            {"menu.recipe_id": mongoose.Types.ObjectId(args.id)}
+            {"menu.recipe_id": mongoose.Types.ObjectId(id)}
             ,{
             $set: {
                 recipeStatus: "active"
             }
-        },{new : true}
+        }
         )
         await transactions.findOne(
-            {"menu.recipe_id": mongoose.Types.ObjectId(args.id)}
+            {"menu.recipe_id": mongoose.Types.ObjectId(id)}
         )
     }
+    
+    const recipe = await recipes.findByIdAndUpdate(id,inputRecipe
+    ,{new: true}
+    )
+
     if(recipe){
         return recipe
         }

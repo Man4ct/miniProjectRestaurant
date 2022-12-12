@@ -20,6 +20,16 @@ type User {
     security_question: String
     security_answer: String
     }
+input userInput {
+    img: String
+    password: String
+    email: String
+    last_name: String
+    first_name: String
+    security_question: String
+    security_answer: String
+}
+
     type userSort {
         email: enumSorting
         last_name: enumSorting
@@ -92,22 +102,8 @@ type Mutation {
         token: String
         new_password: String
     ) : User
-    register(
-    img: String
-    password: String
-    email: String
-    last_name: String
-    first_name: String
-    security_question: String
-    security_answer: String
-    ) : User!
-    updateUser(
-    email: String
-    last_name: String
-    first_name: String
-    fullName: String
-    img: String
-    ): User
+    register(newUser: userInput) : User!
+    updateUser(updateUser: userInput): User
 
     logout(
     email: String

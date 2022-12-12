@@ -8,6 +8,10 @@ type Ingredient{
     status: Enum
     # is_used: Boolean
     }
+    input ingredientInput{
+        name: String
+        stock: Int
+    }
     type ingredientSort{
         name: enumSorting
         stock: enumSorting
@@ -27,8 +31,8 @@ type respondDelIngredient {
     data: Ingredient
     }
 type Mutation{
-    addIngredient(name: String!,stock: Int!): Ingredient!
-    updateIngredient(id: ID!,stock: Int name: String) : Ingredient!
+    addIngredient(ingredient: ingredientInput): Ingredient!
+    updateIngredient(id: ID! ingredient:ingredientInput) : Ingredient!
     deleteIngredient(id: ID!) : respondDelIngredient
     }
 type Query {

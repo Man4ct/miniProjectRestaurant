@@ -9,6 +9,12 @@ type specialOffer {
     status: enumRecipe
     specialOfferDiscount: Int
 }
+input specialOfferInput {
+    title: String
+    description: String
+    menuDiscount: [menuDiscountInput]
+    status:enumRecipe
+}
 type menuDiscount {
     id: ID
     recipe_id: Recipe
@@ -29,8 +35,8 @@ type Query {
     getAllSpecialOffers(page: Int limit: Int title: String, status:enumRecipe) : specialOfferPage
 }
 type Mutation {
-    createSpecialOffer(title: String!, description: String, menuDiscount: [menuDiscountInput], status:enumRecipe): specialOffer
-    updateSpecialOffer(id: ID!, title: String, description: String, menuDiscount: [menuDiscountInput],status: enumRecipe ): specialOffer
+    createSpecialOffer(specialOffer: specialOfferInput): specialOffer
+    updateSpecialOffer(id: ID!,specialOffer: specialOfferInput ): specialOffer
 }
 `
 module.exports = {specialOfferTypeDefs}

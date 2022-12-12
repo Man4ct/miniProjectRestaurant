@@ -68,9 +68,9 @@ async function getAllIngredient(parent,{name,stock,page,limit,sort},context){
                 };
 }
 
-async function addIngredient(parent,args,context){
+async function addIngredient(parent,{ingredient},context){
     const findDuplicate = await ingredients.findOne({
-        name:  new RegExp("^" + args.name.trim("") + "$", 'i')
+        name:  new RegExp("^" + ingredient.name.trim("") + "$", 'i')
 
     })
     if(findDuplicate){
@@ -78,8 +78,8 @@ async function addIngredient(parent,args,context){
             message: 'Ingredient Already Exists!'
         })
     }
-    args.name = args.name.toLowerCase()
-    const newIngredient = new ingredients(args)
+    ingredient.name = ingredient.name.toLowerCase()
+    const newIngredient = new ingredients(ingredient)
     await newIngredient.save()
     return newIngredient;
 }
@@ -87,12 +87,12 @@ async function getOneIngredient(parent,args,context){
     const getOneIngredient = await ingredients.findById(args.id)
     return getOneIngredient
 }
-async function updateIngredient(parent,args,context){
-    if(args.name){
-        args.name = args.name.toLowerCase()
+async function updateIngredient(parent,{ingredient,id},context){
+    if(ingredient.name){
+        ingredient.name = ingredient.name.toLowerCase()
     }
     const findDuplicate = await ingredients.findOne({
-        name:  new RegExp("^" + args.name.trim("") + "$", 'i')
+        name:  new RegExp("^" + ingredient.name.trim("") + "$", 'i')
 
     })
     if(findDuplicate){
@@ -101,12 +101,12 @@ async function updateIngredient(parent,args,context){
         })
     }
     
-    if(args.stock < 0){
+    if(ingredient.stock < 0){
         throw new ApolloError('FooError', {
             message: 'Stock Cannot be less than 0!'
           });
     }
-    const updateIngredient = await ingredients.findByIdAndUpdate(args.id, args,{
+    const updateIngredient = await ingredients.findByIdAndUpdate(id, ingredient,{
         new: true
     })
     if(updateIngredient){
