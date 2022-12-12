@@ -99,9 +99,9 @@ const ingredientsSchema = new mongoose.Schema({
         enum: ["active", "deleted"],
         default: 'active'
     },
-    is_used: {
-        type: Boolean
-    }
+    // is_used: {
+    //     type: Boolean
+    // }
 })
 const recipesSchema = new mongoose.Schema({
     recipe_name:{
@@ -255,7 +255,7 @@ const transactionsSchema = new mongoose.Schema({
 
     totalPrice: {
         type: Number,
-        required: true,
+        // required: true,
         min: 0
     },
     ingredientMap: [

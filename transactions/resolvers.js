@@ -32,12 +32,11 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
     }
     if(recipe_name){
         aggregateQuery.push({
-                $lookup:
-                {
-                  from: "recipes",
-                  localField: "menu.recipe_id",
-                  foreignField: "_id",
-                  as: "recipes"
+                $lookup:{
+                    from: "recipes",
+                    localField: "menu.recipe_id",
+                    foreignField: "_id",
+                    as: "recipes"
                 }
         },
         {
@@ -328,6 +327,7 @@ async function getRecipeLoader(parent,args,context){
         return check
     }
 }
+// async function 
 
 async function reduceIngredientStock(arrIngredient){
     for(let ingredient of arrIngredient){
@@ -338,8 +338,9 @@ async function reduceIngredientStock(arrIngredient){
         })
     }
 }
-async function validateOrder(user_id, menus,checkout){
+async function validateOrder(user_id, menus,checkout,totalPrice){
 try{
+    console.log(totalPrice)
     let menuTransaction = new transactions({menu : menus })
     menuTransaction = await transactions.populate(menuTransaction, {
         path: 'menu.recipe_id',
@@ -353,9 +354,9 @@ try{
         })
     }
     const userCheck = await users.findById(user_id) 
-    let available = 0
-    let price = 0
-    let totalPrice = 0
+    // let available = 0
+    // let price = 0
+    // let totalPrice = 0
     let recipeStatus = null
     let message = [] 
     const stockIngredient = {};  
@@ -367,11 +368,11 @@ try{
             })
         }
         recipeStatus = menu.recipe_id.status
-        available = menu.recipe_id.available
-        if(menu.recipe_id.isDiscount === false){
-            menu.recipe_id.discountAmount = 0
-        }
-        price = menu.recipe_id.price - (menu.recipe_id.price * menu.recipe_id.discountAmount/100)
+        // available = menu.recipe_id.available
+        // if(menu.recipe_id.isDiscount === false){
+        //     menu.recipe_id.discountAmount = 0
+        // }
+        // price = menu.recipe_id.price - (menu.recipe_id.price * menu.recipe_id.discountAmount/100)
         let sold = menu.recipe_id.sold
         const amount = menu.amount
         if(amount <= 0){
@@ -390,10 +391,10 @@ try{
                         message.push(menu.recipe_id.recipe_name) 
                     }
                     if(message.length === 0){ 
-                       
+                        
                         await recipes.findByIdAndUpdate(menu.recipe_id._id,{
                             $set: {
-                                sold: sold + menu.amount
+                                sold: sold + amount
                             },
                         },{new: true})
                     }
@@ -410,7 +411,7 @@ try{
                     stock: stockIngredient[ingredientRecipe.ingredient_id],
                 })
         }
-        totalPrice += price * amount;
+        // totalPrice += price * amount;
     }
     
 
@@ -420,11 +421,11 @@ try{
                         })
     }
     if(checkout === true){
-        if (userCheck.balance < totalPrice){
-            throw new ApolloError("FooError",{
-                message: "It appears your balance is not enough for this transaction, Please Top Up!"
-            })
-        }
+        // if (userCheck.balance < totalPrice){
+        //     throw new ApolloError("FooError",{
+        //         message: "It appears your balance is not enough for this transaction, Please Top Up!"
+        //     })
+        // }
         await users.findByIdAndUpdate(user_id,{
             $set:{
                 balance: userCheck.balance - totalPrice
@@ -440,9 +441,12 @@ try{
     //         })
     //     }
     // })
-    console.log("INI AVAILABLE")
-    console.log(available)
-    return new transactions({user_id: user_id, menu: menus,order_status: "pending",recipeStatus: recipeStatus,totalPrice: totalPrice,onePrice:price,available:available,order_date:moment(new Date()).format("LLL") ,ingredientMap: ingredientMap})
+
+    return new transactions({user_id: user_id, menu: menus,order_status: "pending",recipeStatus: recipeStatus,
+    // totalPrice: totalPrice,
+    // onePrice:price,
+    // available:available,
+    order_date:moment(new Date()).format("LLL") ,ingredientMap: ingredientMap})
     }
     catch(err){
         throw new ApolloError('FooError',err)
@@ -450,19 +454,16 @@ try{
 }
 
 async function createTransaction(parent,args,context){
-    const tick = Date.now()
     if(args.input.length == 0){
         throw new ApolloError('FooError', {
             message: "Input cannot be empty!"
         })
     }
-    
     const transaction = {}
     transaction.user_id = context.req.payload
     transaction.menu = args.input
-    const newTransaction = await validateOrder(context.req.payload, args.input,false)
+    const newTransaction = await validateOrder(context.req.payload, args.input,false,0 )
     await newTransaction.save()
-    console.log(`Total Time Create Transaction: ${Date.now()- tick} ms`)
     return newTransaction
 }
 
@@ -490,7 +491,8 @@ async function checkoutTransaction(parent,args,context){
             Cannot be ordered as it is Unpublished!`
         })
     }
-    newTransaction = await validateOrder(context.req.payload, menu,true)
+    console.log(args.totalPrice)
+    newTransaction = await validateOrder(context.req.payload, menu,true, args.totalPrice)
     reduceIngredientStock(newTransaction.ingredientMap)
     transaction.forEach(async(el) => {
         el.order_status= 'success'
@@ -499,7 +501,7 @@ async function checkoutTransaction(parent,args,context){
     return transaction
 }
 async function updateTransaction(parent,args,context){
-    let amount = 0
+    // let amount = 0
     let recipeId = ""
     let note = ""
     let transaction = null
@@ -536,7 +538,7 @@ async function updateTransaction(parent,args,context){
         const updateTransaction = await transactions.findOneAndUpdate(
             {_id: args.id,},
             {$set: {  
-                "totalPrice": (transaction.onePrice * args.amount),                  
+                // "totalPrice": (transaction.onePrice * args.amount),                  
                 "menu":{
                     "amount": args.amount,
                     "recipe_id": recipeId,
@@ -547,16 +549,14 @@ async function updateTransaction(parent,args,context){
         {new : true}
             )
 
-const data = await transactions.findById(args.id)
-console.log(data.available)
-
-        data.menu.forEach((amount) => {
-            if(amount > data.available){
-                throw new ApolloError('FooError',{
-                    message: 'Insufficient Stock'})
-            }
-        })
-if(updateTransaction)return data
+// const data = await transactions.findById(args.id)
+//         data.menu.forEach((amount) => {
+//             if(amount > data.available){
+//                 throw new ApolloError('FooError',{
+//                     message: 'Insufficient Stock'})
+//             }
+//         })
+if(updateTransaction)return updateTransaction
     }
     if(args.option === 'emptyCart'){
         const deleteTransaction = await transactions.updateMany({
@@ -575,55 +575,55 @@ if(updateTransaction)return data
         }, {
             new : true
         })
-        const data = await transactions.findById(args.id)
-        if(updateTransaction)return data    }
-    if(args.option === 'push'){
-        const updateTransaction = await transactions.findOneAndUpdate(
-                {_id: args.id,},
-                {$set: {  
-                    "totalPrice": transaction.totalPrice + transaction.onePrice,                  
-                    "menu":{
-                        "amount": amount + 1,
-                        "recipe_id": recipeId,
-                        "note": note
-                    },
-                },
-            },
-            {new : true}
-                )
-const data = await transactions.findById(args.id)
-            data.menu.forEach((amount) => {
-                if(amount.amount > data.available){ƒ
-                    throw new ApolloError('FooError',{
-                        message: 'Insufficient Stock'})
-                }
-            })
-    if(updateTransaction)return data
-    }
+        // const data = await transactions.findById(args.id)
+        if(updateTransaction)return updateTransaction    }
+//     if(args.option === 'push'){
+//         const updateTransaction = await transactions.findOneAndUpdate(
+//                 {_id: args.id,},
+//                 {$set: {  
+//                     "totalPrice": transaction.totalPrice + transaction.onePrice,                  
+//                     "menu":{
+//                         "amount": amount + 1,
+//                         "recipe_id": recipeId,
+//                         "note": note
+//                     },
+//                 },
+//             },
+//             {new : true}
+//                 )
+// // const data = await transactions.findById(args.id)
+// //             data.menu.forEach((amount) => {
+// //                 if(amount.amount > data.available){ƒ
+// //                     throw new ApolloError('FooError',{
+// //                         message: 'Insufficient Stock'})
+// //                 }
+// //             })
+//     if(updateTransaction)return updateTransaction
+//     }
 
-    if(args.option === 'pull'){
-        const data = await transactions.findById(args.id)
-            data.menu.forEach((el) => {
-                if(el.amount <= 1){
-                    throw new ApolloError('FooError',{
-                        message: 'Insufficient Stock'})
-                }
-            })
-        const updateTransaction = await transactions.findOneAndUpdate(
-                {_id: args.id},
-                {$set: {
-                    "totalPrice": transaction.totalPrice - transaction.onePrice,                  
-                    "menu":{
-                        "amount": amount - 1,
-                        "recipe_id": recipeId,
-                        "note": note
-                    }
-                }
-            },{new : true}
-                )
+//     if(args.option === 'pull'){
+//         const data = await transactions.findById(args.id)
+//             data.menu.forEach((el) => {
+//                 if(el.amount <= 1){
+//                     throw new ApolloError('FooError',{
+//                         message: 'Insufficient Stock'})
+//                 }
+//             })
+//         const updateTransaction = await transactions.findOneAndUpdate(
+//                 {_id: args.id},
+//                 {$set: {
+//                     "totalPrice": transaction.totalPrice - transaction.onePrice,                  
+//                     "menu":{
+//                         "amount": amount - 1,
+//                         "recipe_id": recipeId,
+//                         "note": note
+//                     }
+//                 }
+//             },{new : true}
+//                 )
             
-            if(updateTransaction)return data
-            }
+//             if(updateTransaction)return data
+//             }
     
     throw new ApolloError('FooError', {
         message: 'Wrong ID!'
@@ -634,7 +634,7 @@ async function availableLoader(parent, args, context, info) {
     const minStock = []
     for(let recipe of parent.menu){
         const recipeId = await recipes.findById(recipe.recipe_id)
-         for (let ingredient of recipeId.ingredients) {
+        for (let ingredient of recipeId.ingredients) {
         const recipe_ingredient = await ingredients.findById(ingredient.ingredient_id);
         if (!recipe_ingredient) throw new ApolloError(`Ingredient with ID: ${ingredient.ingredient_id} not found`, "404");
         minStock.push(Math.floor(recipe_ingredient.stock / ingredient.stock_used));
@@ -642,7 +642,19 @@ async function availableLoader(parent, args, context, info) {
     return Math.min(...minStock);
         
     }
-   
+}
+async function getTotalPrice(parent,args,context){
+    let totalPrice = 0
+    let amount = 0
+    let price = 0
+    for(let recipe of parent.menu){
+            amount = recipe.amount
+        const recipeId = await recipes.findById(recipe.recipe_id)
+            price = recipeId.price - (recipeId.price * recipeId.discountAmount/100 )
+        
+        totalPrice = price * amount
+    }
+    return totalPrice
 }
 
 const resolverTransaction = {
@@ -658,7 +670,8 @@ const resolverTransaction = {
     },
     Transaction: {
         user_id : getUserLoader,
-        available: availableLoader
+        available: availableLoader,
+        totalPrice: getTotalPrice
     },
     Menu: {
         recipe_id: getRecipeLoader

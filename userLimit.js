@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const {users} = require('./schema');
 const { ApolloError} = require('apollo-errors');
 
-async function testMiddleware(resolve,parent,args,context,info) {
+async function userLimitMiddleware(resolve,parent,args,context,info) {
     const user_id= context.req.payload
 
     const user = await users.findById(user_id)
@@ -14,25 +14,27 @@ async function testMiddleware(resolve,parent,args,context,info) {
     return resolve(parent,args,context,info)
 }
 
+
+
 module.exports = {
     Query: {
-        getAllUsers: testMiddleware,
-        getOneIngredient: testMiddleware,
-        getAllIngredient: testMiddleware,
-        getOneRecipe: testMiddleware,
-        getAllRecipes: testMiddleware,
-        getOneTransaction: testMiddleware,
+        getAllUsers: userLimitMiddleware,
+        getOneIngredient: userLimitMiddleware,
+        getAllIngredient: userLimitMiddleware,
+        getOneRecipe: userLimitMiddleware,
+        getAllRecipes: userLimitMiddleware,
+        getOneTransaction: userLimitMiddleware,
     },
     Mutation: {
-        deleteUser: testMiddleware,
-        addIngredient: testMiddleware,
-        updateIngredient: testMiddleware,
-        deleteIngredient: testMiddleware,
-        deleteRecipe: testMiddleware,
-        updateRecipe: testMiddleware,
-        createRecipe: testMiddleware,
-        createSpecialOffer: testMiddleware,
-        updateSpecialOffer: testMiddleware,
+        deleteUser: userLimitMiddleware,
+        addIngredient: userLimitMiddleware,
+        updateIngredient: userLimitMiddleware,
+        deleteIngredient: userLimitMiddleware,
+        deleteRecipe: userLimitMiddleware,
+        updateRecipe: userLimitMiddleware,
+        createRecipe: userLimitMiddleware,
+        createSpecialOffer: userLimitMiddleware,
+        updateSpecialOffer: userLimitMiddleware,
     }
 }
 

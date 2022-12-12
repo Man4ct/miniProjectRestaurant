@@ -5,7 +5,7 @@ const { ApolloServer,gql } = require('apollo-server');
 const {makeExecutableSchema} = require('@graphql-tools/schema')
 const {applyMiddleware} = require('graphql-middleware');
 const authMiddleware = require('./auth')
-const testMiddleware = require('./userLimit')
+const userLimitMiddleware = require('./userLimit')
 const DataLoader = require('dataloader');
 const {merge} = require('lodash')
 const ingredientLoader = require('./loader/ingredientLoader.js');
@@ -49,7 +49,7 @@ const resolvers = merge(
     })
     const schemaMiddleware = applyMiddleware(
         schema,authMiddleware,
-        testMiddleware
+        userLimitMiddleware,
     )
 const server = new ApolloServer({
     schema: schemaMiddleware,

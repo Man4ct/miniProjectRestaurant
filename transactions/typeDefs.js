@@ -74,7 +74,7 @@ type Query {
 }
 type Mutation {
     createTransaction( input: menuInput) : Transaction
-    checkoutTransaction: [Transaction]
+    checkoutTransaction(totalPrice: Int): [Transaction]
     updateTransaction(id:ID option: enumUpdate,amount:Int, note: String recipe_id: ID) : Transaction!
 }
 `

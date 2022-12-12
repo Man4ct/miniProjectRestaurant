@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const {recipes, specialOffers } = require('../schema');
 const { ApolloError } = require('apollo-errors');
+const { ifError } = require('assert');
 async function createSpecialOffer(parent, { title, description, menuDiscount, status }, context, info) {
     try {
         if (!menuDiscount || !menuDiscount.length) {
@@ -76,6 +77,12 @@ async function getAllSpecialOffers(parent, args, context) {
         },
         { $sort: { specialOfferDiscount: -1 } }
     ]
+    if(args.status){
+        aggregateQuery.push({
+            $match: { status: args.status}
+        })
+        count = await specialOffers.count({ status: args.status });
+    }
     if (args.title) {
         aggregateQuery.push({
             $match: { title: new RegExp(args.title, "i") }

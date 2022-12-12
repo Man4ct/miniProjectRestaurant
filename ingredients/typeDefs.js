@@ -6,7 +6,7 @@ type Ingredient{
     name: String
     stock: Int
     status: Enum
-    is_used: Boolean
+    # is_used: Boolean
     }
     type ingredientSort{
         name: enumSorting
