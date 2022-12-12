@@ -166,15 +166,6 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
                     //     $gte:new Date(order_date_start), $lte: new Date(order_date_end)
                     // }})
             }
-        // if(order_date_start === order_date_end){
-        //     aggregateQuery.push(
-        //         {
-        //             $match: {"updatedAt" :{$eq: new Date(order_date_start)
-        //         }}
-        //         })
-        // }else{
-
-        // }
     }
     
     if(order_date_start && !order_date_end){
@@ -277,7 +268,6 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
                 // }})
         }
     }
-   
     
     if (page){
         aggregateQuery.push({
@@ -285,14 +275,11 @@ async function getAllTransactions(parent,{page, limit, last_name_user,time_start
         },
         {$limit: limit})
     }
-     let result = await transactions.aggregate(aggregateQuery);
+    let result = await transactions.aggregate(aggregateQuery);
                 count = result.length
                 result.forEach((el)=>{
                             el.id = mongoose.Types.ObjectId(el._id)
                         })
-                        // if(!page){
-                        //     count = result.length
-                        // }
                         const max_page = Math.ceil(count/limit) || 1
                         if(max_page < page){
                             throw new ApolloError('FooError', {
@@ -340,7 +327,6 @@ async function reduceIngredientStock(arrIngredient){
 }
 async function validateOrder(user_id, menus,checkout,totalPrice){
 try{
-    console.log(totalPrice)
     let menuTransaction = new transactions({menu : menus })
     menuTransaction = await transactions.populate(menuTransaction, {
         path: 'menu.recipe_id',
@@ -354,9 +340,6 @@ try{
         })
     }
     const userCheck = await users.findById(user_id) 
-    // let available = 0
-    // let price = 0
-    // let totalPrice = 0
     let recipeStatus = null
     let message = [] 
     const stockIngredient = {};  
@@ -368,11 +351,6 @@ try{
             })
         }
         recipeStatus = menu.recipe_id.status
-        // available = menu.recipe_id.available
-        // if(menu.recipe_id.isDiscount === false){
-        //     menu.recipe_id.discountAmount = 0
-        // }
-        // price = menu.recipe_id.price - (menu.recipe_id.price * menu.recipe_id.discountAmount/100)
         let sold = menu.recipe_id.sold
         const amount = menu.amount
         if(amount <= 0){
@@ -381,13 +359,14 @@ try{
             })
         }
         for( let ingredient of menu.recipe_id.ingredients){
-                const ingredientRecipe = {ingredient_id: ingredient.ingredient_id._id,
-                    stock: ingredient.ingredient_id.stock - (ingredient.stock_used * amount)}
+                const ingredientRecipe = {
+                    ingredient_id: ingredient.ingredient_id._id,
+                    stock: ingredient.ingredient_id.stock - (ingredient.stock_used * amount)
+                }
                     if (ingredientRecipe.ingredient_id in stockIngredient) { } 
                     else { stockIngredient[ingredientRecipe.ingredient_id] = ingredient.ingredient_id.stock; }
                     
                 if(checkout === true){ 
-                    
                     if(stockIngredient[ingredientRecipe.ingredient_id] < (ingredient.stock_used * amount)){ 
                         message.push(menu.recipe_id.recipe_name) 
                     }
@@ -412,7 +391,6 @@ try{
                     stock: stockIngredient[ingredientRecipe.ingredient_id],
                 })
         }
-        // totalPrice += price * amount;
     }
     
 
@@ -422,11 +400,11 @@ try{
                         })
     }
     if(checkout === true){
-        // if (userCheck.balance < totalPrice){
-        //     throw new ApolloError("FooError",{
-        //         message: "It appears your balance is not enough for this transaction, Please Top Up!"
-        //     })
-        // }
+        if (userCheck.balance < totalPrice){
+            throw new ApolloError("FooError",{
+                message: "It appears your balance is not enough for this transaction, Please Top Up!"
+            })
+        }
         await users.findByIdAndUpdate(user_id,{
             $set:{
                 balance: userCheck.balance - totalPrice
@@ -594,7 +572,11 @@ async function getTotalPrice(parent,args,context){
     for(let recipe of parent.menu){
             amount = recipe.amount
         const recipeId = await recipes.findById(recipe.recipe_id)
-            price = recipeId.price - (recipeId.price * recipeId.discountAmount/100 )
+        let discount = recipeId.discountAmount
+        if (recipeId.isDiscount === false){
+            discount = 0
+        }
+            price = recipeId.price - (recipeId.price * discount/100 )
         
         totalPrice = price * amount
     }

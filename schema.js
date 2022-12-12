@@ -244,10 +244,10 @@ const transactionsSchema = new mongoose.Schema({
         default: 'active'
     },
 
-    onePrice: {
-        type: Number,
-        min: 0
-    },
+    // onePrice: {
+    //     type: Number,
+    //     min: 0
+    // },
     recipeStatus:{
         type: String,
         enum: ["active", "deleted","unpublished"],
