@@ -53,7 +53,6 @@ async function createSpecialOffer(parent, { specialOffer }, context, info) {
                 })
             }
             
-            console.log(menu.recipe_id)
             if (checkMenu.indexOf(menu.recipe_id) === -1) {
                 throw new ApolloError("FooError", {
                     message: "Menu Not Found in Database!"
@@ -126,13 +125,13 @@ async function getAllSpecialOffers(parent, args, context) {
     result.forEach((el) => {
         el.id = mongoose.Types.ObjectId(el._id)
     })
-
     const max_page = Math.ceil(count / args.limit) || 1
     if (max_page < args.page) {
         throw new ApolloError('FooError', {
             message: 'Page is Empty!'
         });
     }
+    console.log("ini getAllSpecialOffers")
     return {
         count: count,
         max_page: max_page,
@@ -149,6 +148,45 @@ async function getOneSpecialOffer(parent,args,context){
     }
     return getOne
 }
+// async function updateSpecialOffer(parent, {specialOffer, id}){
+//     let discount = specialOffer.menuDiscount.map((el) => el.discount)
+
+//     if(specialOffer.status === 'deleted'){
+//         for(menu of specialOffer.menuDiscount){
+//             await specialOffers.findByIdAndUpdate(id,{
+//                 specialOfferDiscount : 0
+//             },{new:true})
+//             await recipes.findByIdAndUpdate(menu.recipe_id,{
+//                 isDiscount: false,
+//                 discountAmount: 0
+//             },{new:true})
+//         }
+        
+//     }else{
+//         await specialOffers.findByIdAndUpdate(id,{
+//             specialOfferDiscount : Math.max(...discount)
+//         },{
+//             new: true
+//         })
+//     }
+//     if(specialOffer.status === 'unpublished') {
+//         await recipes.findByIdAndUpdate(menu.recipe_id,{
+//             isDiscount: false,
+//             discountAmount: menu.discount
+//         },{new:true})
+//     }
+//     if(specialOffer.status === 'active'){
+//         await recipes.findByIdAndUpdate(menu.recipe_id,{
+//             isDiscount: true,
+//             discountAmount: menu.discount
+//         },{new:true})
+//     }
+//     const updateSpecialOffer = await specialOffers.findByIdAndUpdate(id,specialOffer,{
+//         new: true
+//     })
+//     return updateSpecialOffer
+// }
+
 
 async function updateSpecialOffer(parent,{specialOffer, id},context){
     if(specialOffer.menuDiscount){
@@ -163,7 +201,6 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
                     })
                 }
                 if(menu.discount){
-    
                     if(menu.discount < 0 || menu.discount > 100) {
                         throw new ApolloError('FooError', {
                             message: "Discount is out of range!"
@@ -208,6 +245,7 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
                 }
             }
         }
+
     const updateSpecialOffer = await specialOffers.findByIdAndUpdate(id,specialOffer,{
         new: true
     })
@@ -216,6 +254,11 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
             message: 'Wrong ID!'
             });
     }
+    console.log("APDEET")
+    console.log(updateSpecialOffer)
+    throw new ApolloError('FooError', {
+        message: 'Success!'
+        });
     return updateSpecialOffer
     
     

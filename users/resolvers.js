@@ -49,7 +49,7 @@ async function register(parent,{newUser}, context, info){
     if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(newUser.email))throw new Error("Email not valid!")
     if(!new RegExp(`@gmail.com$`).test(newUser.email)){
         throw new ApolloError('FooError', {
-            message: 'Email has to have a domain of "@gmail.com"!'
+            message: "Email has to have a domain of '@gmail.com'!"
         });
     }
     userCheck = await users.findOne({ email: newUser.email})
@@ -198,7 +198,7 @@ async function updateUser(parent, {updateUser},context){
         if(!/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(updateUser.email))throw new Error("Email not valid!")
         if(!new RegExp(`@gmail.com$`).test(updateUser.email)){
             throw new ApolloError('FooError', {
-                message: 'Email has to have a domain of "@gmail.com"!'
+                message: "Email has to have a domain of '@gmail.com'!"
             });
         }
     }
@@ -255,7 +255,7 @@ async function getToken(parent, args,context){
     });
     if(userCheck.status === 'deleted'){
         throw new ApolloError('FooError', 
-        {message: "Can't Login, User Status: Deleted!"
+        {message: "Can't Login, User Status is Deleted!"
     })
     }
     const getPassword = await bcrypt.compare(args.password, userCheck.password )

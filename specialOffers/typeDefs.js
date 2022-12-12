@@ -36,7 +36,7 @@ type Query {
 }
 type Mutation {
     createSpecialOffer(specialOffer: specialOfferInput): specialOffer
-    updateSpecialOffer(id: ID!,specialOffer: specialOfferInput ): specialOffer
+    updateSpecialOffer(id: ID specialOffer: specialOfferInput): specialOffer
 }
 `
 module.exports = {specialOfferTypeDefs}
