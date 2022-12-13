@@ -490,53 +490,57 @@ async function updateTransaction(parent,{menu,id,option},context){
     //     await transaction.save()
     // return transaction
     // }
-
-    if(option === 'emptyCart'){
-        const deleteTransaction = await transactions.updateMany({
-            user_id: mongoose.Types.ObjectId(context.req.payload),
-            order_status: "pending"
-        },{
-                status: 'deleted'
-        },{new : true})
-        return deleteTransaction
-    }
-    if(option === 'delete'){
-        const updateTransaction = await transactions.findByIdAndUpdate(args.id,{
-            status: 'deleted'
-        }, {
-            new : true
-        })
-        // const data = await transactions.findById(args.id)
-        if(updateTransaction)return updateTransaction    }
-    if(menu.note){
-        transaction.menu.forEach((el) => {
-        // note = menu.note
-        return( el.note= menu.note)
-    })
-    
-    await transaction.save()
-    return transaction
-}
-    if(menu.amount){
-        if(menu.amount <= 0){
-            throw new ApolloError('FooError',{
-                message: 'Cannot order if amount 0 or less'})
+    if(option){
+        if(option === 'emptyCart'){
+            const deleteTransaction = await transactions.updateMany({
+                user_id: mongoose.Types.ObjectId(context.req.payload),
+                order_status: "pending"
+            },{
+                    status: 'deleted'
+            },{new : true})
+            return deleteTransaction
         }
-        const updateTransaction = await transactions.findOneAndUpdate(
-            {_id: id,},
-            {$set: {  
-                // "totalPrice": (transaction.onePrice * args.amount),                  
-                "menu":{
-                    "amount": menu.amount,
-                    "recipe_id": recipeId,
-                    "note": note
+        if(option === 'delete'){
+            const updateTransaction = await transactions.findByIdAndUpdate(args.id,{
+                status: 'deleted'
+            }, {
+                new : true
+            })
+        if(updateTransaction)return updateTransaction    
+        }
+    }
+
+    if(menu){
+        if(menu.note){
+            transaction.menu.forEach((el) => {
+            // note = menu.note
+            return( el.note= menu.note)
+        })
+        await transaction.save()
+        return transaction
+    }
+        if(menu.amount){
+            if(menu.amount <= 0){
+                throw new ApolloError('FooError',{
+                    message: 'Cannot order if amount 0 or less'})
+            }
+            const updateTransaction = await transactions.findOneAndUpdate(
+                {_id: id,},
+                {$set: {  
+                    // "totalPrice": (transaction.onePrice * args.amount),                  
+                    "menu":{
+                        "amount": menu.amount,
+                        "recipe_id": recipeId,
+                        "note": note
+                    },
                 },
             },
-        },
-        {new : true}
-            )
-        if(updateTransaction)return updateTransaction
+            {new : true}
+                )
+            if(updateTransaction)return updateTransaction
+        }
     }
+
     
     throw new ApolloError('FooError', {
         message: 'Wrong ID!'
