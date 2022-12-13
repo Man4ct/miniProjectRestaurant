@@ -252,26 +252,6 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
             }
         }else{
             for(menu of findSpecialOffer.menuDiscount){
-                // if(menu.recipe_id){
-                // if (checkMenu.indexOf(menu.recipe_id) === -1) {
-                //     throw new ApolloError("FooError", {
-                //         message: "Menu Not Found in Database!"
-                //     })
-                // }
-                // if(menu.discount){
-                //     if(menu.discount < 0 || menu.discount > 100) {
-                //         throw new ApolloError('FooError', {
-                //             message: "Discount is out of range!"
-                //         })
-                //     }
-                // const findMenu = await recipes.findById(menu.recipe_id)
-                // if(findMenu.status === 'unpublished' || findMenu.status === 'deleted') {
-                //     throw new ApolloError("FooError",{
-                //         message: "Menu You Insert is Unpublished!"
-                //     })
-                // }
-                // }
-                // }
                 if(specialOffer.status){
                     if(specialOffer.status === 'deleted') {
                         console.log("ini deleted")
@@ -309,37 +289,7 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
             }
         }
     
-    // if(specialOffer.status){
-    //     if(specialOffer.status === 'deleted') {
-    //         console.log("ini deleted")
-    //         await specialOffers.findByIdAndUpdate(id,{
-    //             specialOfferDiscount : 0,
-    //             status : 'deleted'
-    //         },{
-    //             new: true
-    //         })
-    //         await recipes.findByIdAndUpdate(menu.recipe_id,{
-    //             isDiscount: false,
-    //             discountAmount: 0
-    //         },{new:true})
-    //     }else{
-    //         await specialOffers.findByIdAndUpdate(id,{
-    //             specialOfferDiscount : Math.max(...discount)
-    //         },{
-    //             new: true
-    //         })
-    //     }
-        // if(specialOffer.status === 'unpublished') {
-        //     await recipes.findByIdAndUpdate(menu.recipe_id,{
-        //         isDiscount: false,
-        //     },{new:true})
-        // }
-        // if(specialOffer.status === 'active'){
-        //     await recipes.findByIdAndUpdate(menu.recipe_id,{
-        //         isDiscount: true,
-        //     },{new:true})
-        // }
-    // }
+
 
 
     const updateSpecialOffer = await specialOffers.findByIdAndUpdate(id,specialOffer,{
@@ -350,11 +300,6 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
             message: 'Wrong ID!'
             });
     }
-    // console.log("APDEET")
-    // console.log(updateSpecialOffer)
-    // throw new ApolloError('FooError', {
-    //     message: 'Success!'
-    //     });
     return updateSpecialOffer
     
     
