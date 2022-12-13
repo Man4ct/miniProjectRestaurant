@@ -412,19 +412,8 @@ try{
         })
     }
 
-    // return true
-    // ingredientMap.forEach((el) => {
-    //     if(el.stock < 0){
-    //         throw new ApolloError('FooError',{
-    //             message: 'stock ingredient not enough'
-    //         })
-    //     }
-    // })
-
     return new transactions({user_id: user_id, menu: menus,order_status: "pending",recipeStatus: recipeStatus,
-    // totalPrice: totalPrice,
-    // onePrice:price,
-    // available:available,
+
     order_date:moment(new Date()).format("LLL") ,ingredientMap: ingredientMap})
     }
     catch(err){
@@ -501,11 +490,30 @@ async function updateTransaction(parent,{menu,id,option},context){
     //     await transaction.save()
     // return transaction
     // }
+
+    if(option === 'emptyCart'){
+        const deleteTransaction = await transactions.updateMany({
+            user_id: mongoose.Types.ObjectId(context.req.payload),
+            order_status: "pending"
+        },{
+                status: 'deleted'
+        },{new : true})
+        return deleteTransaction
+    }
+    if(option === 'delete'){
+        const updateTransaction = await transactions.findByIdAndUpdate(args.id,{
+            status: 'deleted'
+        }, {
+            new : true
+        })
+        // const data = await transactions.findById(args.id)
+        if(updateTransaction)return updateTransaction    }
     if(menu.note){
         transaction.menu.forEach((el) => {
-        note = menu.note
-        return( el.note= note)
+        // note = menu.note
+        return( el.note= menu.note)
     })
+    
     await transaction.save()
     return transaction
 }
@@ -529,23 +537,6 @@ async function updateTransaction(parent,{menu,id,option},context){
             )
         if(updateTransaction)return updateTransaction
     }
-    if(option === 'emptyCart'){
-        const deleteTransaction = await transactions.updateMany({
-            user_id: mongoose.Types.ObjectId(context.req.payload),
-            order_status: "pending"
-        },{
-                status: 'deleted'
-        },{new : true})
-        return deleteTransaction
-    }
-    if(option === 'delete'){
-        const updateTransaction = await transactions.findByIdAndUpdate(args.id,{
-            status: 'deleted'
-        }, {
-            new : true
-        })
-        // const data = await transactions.findById(args.id)
-        if(updateTransaction)return updateTransaction    }
     
     throw new ApolloError('FooError', {
         message: 'Wrong ID!'
