@@ -501,7 +501,7 @@ async function updateTransaction(parent,{menu,id,option},context){
             return deleteTransaction
         }
         if(option === 'delete'){
-            const updateTransaction = await transactions.findByIdAndUpdate(args.id,{
+            const updateTransaction = await transactions.findByIdAndUpdate(id,{
                 status: 'deleted'
             }, {
                 new : true
