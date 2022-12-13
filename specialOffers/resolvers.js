@@ -131,7 +131,6 @@ async function getAllSpecialOffers(parent, args, context) {
             message: 'Page is Empty!'
         });
     }
-    console.log("ini getAllSpecialOffers")
     return {
         count: count,
         max_page: max_page,
@@ -189,10 +188,12 @@ async function getOneSpecialOffer(parent,args,context){
 
 
 async function updateSpecialOffer(parent,{specialOffer, id},context){
-    if(specialOffer.menuDiscount){
-        let checkMenu = await recipes.find()
+    let checkMenu = await recipes.find()
         checkMenu = checkMenu.map((el) => el.id)
-        let discount = specialOffer.menuDiscount.map((el) => el.discount)
+    const findSpecialOffer = await specialOffers.findById(id)
+    let discount = findSpecialOffer.menuDiscount.map((el) => el.discount)
+        if(specialOffer.menuDiscount){
+            discount = specialOffer.menuDiscount.map((el) => el.discount)
             for(menu of specialOffer.menuDiscount){
                 if(menu.recipe_id){
                 if (checkMenu.indexOf(menu.recipe_id) === -1) {
@@ -206,45 +207,140 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
                             message: "Discount is out of range!"
                         })
                     }
-                }
                 const findMenu = await recipes.findById(menu.recipe_id)
                 if(findMenu.status === 'unpublished' || findMenu.status === 'deleted') {
                     throw new ApolloError("FooError",{
                         message: "Menu You Insert is Unpublished!"
                     })
                 }
+                }
+                }
+                if(specialOffer.status){
+                    if(specialOffer.status === 'deleted') {
+                        console.log("ini deleted")
+                        await specialOffers.findByIdAndUpdate(id,{
+                            specialOfferDiscount : 0,
+                            status : 'deleted'
+                        },{
+                            new: true
+                        })
+                        await recipes.findByIdAndUpdate(menu.recipe_id,{
+                            isDiscount: false,
+                            discountAmount: 0
+                        },{new:true})
+                    }else{
+                        await specialOffers.findByIdAndUpdate(id,{
+                            specialOfferDiscount : Math.max(...discount)
+                        },{
+                            new: true
+                        })
+                    }
+                    if(specialOffer.status === 'unpublished') {
+                        await recipes.findByIdAndUpdate(menu.recipe_id,{
+                            isDiscount: false,
+                            discountAmount: menu.discount
+                        },{new:true})
+                    }
+                    if(specialOffer.status === 'active'){
+                        await recipes.findByIdAndUpdate(menu.recipe_id,{
+                            isDiscount: true,
+                            discountAmount: menu.discount
+                        },{new:true})
+                    }
+                }
+                
             }
-                if(specialOffer.status === 'deleted') {
-                    await specialOffers.findByIdAndUpdate(id,{
-                        specialOfferDiscount : 0
-                    },{
-                        new: true
-                    })
-                    await recipes.findByIdAndUpdate(menu.recipe_id,{
-                        isDiscount: false,
-                        discountAmount: 0
-                    },{new:true})
-                }else{
-                    await specialOffers.findByIdAndUpdate(id,{
-                        specialOfferDiscount : Math.max(...discount)
-                    },{
-                        new: true
-                    })
+        }else{
+            for(menu of findSpecialOffer.menuDiscount){
+                // if(menu.recipe_id){
+                // if (checkMenu.indexOf(menu.recipe_id) === -1) {
+                //     throw new ApolloError("FooError", {
+                //         message: "Menu Not Found in Database!"
+                //     })
+                // }
+                // if(menu.discount){
+                //     if(menu.discount < 0 || menu.discount > 100) {
+                //         throw new ApolloError('FooError', {
+                //             message: "Discount is out of range!"
+                //         })
+                //     }
+                // const findMenu = await recipes.findById(menu.recipe_id)
+                // if(findMenu.status === 'unpublished' || findMenu.status === 'deleted') {
+                //     throw new ApolloError("FooError",{
+                //         message: "Menu You Insert is Unpublished!"
+                //     })
+                // }
+                // }
+                // }
+                if(specialOffer.status){
+                    if(specialOffer.status === 'deleted') {
+                        console.log("ini deleted")
+                        await specialOffers.findByIdAndUpdate(id,{
+                            specialOfferDiscount : 0,
+                            status : 'deleted'
+                        },{
+                            new: true
+                        })
+                        await recipes.findByIdAndUpdate(menu.recipe_id,{
+                            isDiscount: false,
+                            discountAmount: 0
+                        },{new:true})
+                    }else{
+                        await specialOffers.findByIdAndUpdate(id,{
+                            specialOfferDiscount : Math.max(...discount)
+                        },{
+                            new: true
+                        })
+                    }
+                    if(specialOffer.status === 'unpublished') {
+                        await recipes.findByIdAndUpdate(menu.recipe_id,{
+                            isDiscount: false,
+                            discountAmount: menu.discount
+                        },{new:true})
+                    }
+                    if(specialOffer.status === 'active'){
+                        await recipes.findByIdAndUpdate(menu.recipe_id,{
+                            isDiscount: true,
+                            discountAmount: menu.discount
+                        },{new:true})
+                    }
                 }
-                if(specialOffer.status === 'unpublished') {
-                    await recipes.findByIdAndUpdate(menu.recipe_id,{
-                        isDiscount: false,
-                        discountAmount: menu.discount
-                    },{new:true})
-                }
-                if(specialOffer.status === 'active'){
-                    await recipes.findByIdAndUpdate(menu.recipe_id,{
-                        isDiscount: true,
-                        discountAmount: menu.discount
-                    },{new:true})
-                }
+                
             }
         }
+    
+    // if(specialOffer.status){
+    //     if(specialOffer.status === 'deleted') {
+    //         console.log("ini deleted")
+    //         await specialOffers.findByIdAndUpdate(id,{
+    //             specialOfferDiscount : 0,
+    //             status : 'deleted'
+    //         },{
+    //             new: true
+    //         })
+    //         await recipes.findByIdAndUpdate(menu.recipe_id,{
+    //             isDiscount: false,
+    //             discountAmount: 0
+    //         },{new:true})
+    //     }else{
+    //         await specialOffers.findByIdAndUpdate(id,{
+    //             specialOfferDiscount : Math.max(...discount)
+    //         },{
+    //             new: true
+    //         })
+    //     }
+        // if(specialOffer.status === 'unpublished') {
+        //     await recipes.findByIdAndUpdate(menu.recipe_id,{
+        //         isDiscount: false,
+        //     },{new:true})
+        // }
+        // if(specialOffer.status === 'active'){
+        //     await recipes.findByIdAndUpdate(menu.recipe_id,{
+        //         isDiscount: true,
+        //     },{new:true})
+        // }
+    // }
+
 
     const updateSpecialOffer = await specialOffers.findByIdAndUpdate(id,specialOffer,{
         new: true
@@ -254,11 +350,11 @@ async function updateSpecialOffer(parent,{specialOffer, id},context){
             message: 'Wrong ID!'
             });
     }
-    console.log("APDEET")
-    console.log(updateSpecialOffer)
-    throw new ApolloError('FooError', {
-        message: 'Success!'
-        });
+    // console.log("APDEET")
+    // console.log(updateSpecialOffer)
+    // throw new ApolloError('FooError', {
+    //     message: 'Success!'
+    //     });
     return updateSpecialOffer
     
     

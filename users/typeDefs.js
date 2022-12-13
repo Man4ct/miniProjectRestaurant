@@ -13,8 +13,6 @@ type User {
     role: Role
     balance: Int
     token: String
-    verify: String
-    sort: userSort
     fullName: String
     isUsed: Boolean
     security_question: String
