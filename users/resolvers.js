@@ -233,7 +233,7 @@ async function deleteUser(parent, args,context){
       });
     
 }
-async function getToken(parent, args,context){
+async function Login(parent, args,context){
         if(!args.email){
             return new ApolloError('FooError', {
                 message: 'Email Required !'
@@ -250,9 +250,9 @@ async function getToken(parent, args,context){
             message: 'Email Not Found !'
         });
     }
-    if(userCheck.isUsed === true)return new ApolloError('FooError', {
-        message: 'Your account has been used !'
-    });
+    // if(userCheck.isUsed === true)return new ApolloError('FooError', {
+    //     message: 'Your account has been used !'
+    // });
     if(userCheck.status === 'deleted'){
         throw new ApolloError('FooError', 
         {message: "Can't Login, User Status is Deleted!"
@@ -272,15 +272,7 @@ async function getToken(parent, args,context){
         }
     })
     const token = jwt.sign({ email: args.email,},'zetta',{expiresIn: "6h"});
-    return{message: token, user: { 
-        email: userCheck.email, 
-        fullName: userCheck.first_name + ' ' + userCheck.last_name, 
-        first_name: userCheck.first_name, 
-        last_name: userCheck.last_name,
-        userType: userCheck.userType,
-        role: userCheck.role,
-        img: userCheck.img
-    }}
+    return token
 }
 async function changePassword(parent,args,context){
         const userCheck = await users.findById(context.req.payload)
@@ -346,7 +338,7 @@ const resolverUser  = {
         register,
         updateUser,
         deleteUser,
-        getToken,
+        Login,
         logout,
         forgotPassword,
         changePassword

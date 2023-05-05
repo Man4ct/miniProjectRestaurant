@@ -68,23 +68,11 @@ enum enumSorting {
     asc
     desc
 }
-type userLogin {
-    email: String
-    fullName: String
-    first_name: String
-    last_name: String
-    userType: userType
-    role: Role
-    isUsed: Boolean
-    img: String
-    
-}
 type respondAddCart {
     message: String
 }
 type login {
-    message: String
-    user: userLogin
+    token: String
     }
 type Mutation {
     reqTokenByEmail(
@@ -108,7 +96,7 @@ type Mutation {
     isUsed: Boolean
     ): User
     deleteUser(id: ID!): respondDelUser!
-    getToken(email: String!, password:String!) : login!
+    Login(email: String!, password:String!) : String
 }
 type Query {
     getAllUsers(email:String,last_name: String,first_name:String,page: Int,limit: Int sort:userSorting ) : usersPage!
